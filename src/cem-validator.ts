@@ -187,7 +187,7 @@ export function testPackageType(moduleType: string, severity: Severity) {
     addFailure(
       "packageJson.moduleType",
       severity,
-      "Package `type` is not 'module'."
+      "Package `type` is not 'module'. More information can be found at: https://nodejs.org/api/packages.html#type."
     );
   }
 }
@@ -203,7 +203,7 @@ export function testMainProperty(main: string, severity: Severity) {
     addFailure(
       "packageJson.main",
       severity,
-      "Invalid file path is set to `main` property. More information can be found at: https://nodejs.org/api/packages.html#main"
+      "Invalid file path is set to `main` property. More information can be found at: https://nodejs.org/api/packages.html#main."
     );
   }
 }
@@ -219,7 +219,7 @@ export function testModuleProperty(module: string, severity: Severity) {
     addFailure(
       "packageJson.module",
       severity,
-      "Invalid file path is set to `module` property. More information can be found at: https://nodejs.org/api/packages.html#module"
+      "Invalid file path is set to `module` property. More information can be found at: https://nodejs.org/api/packages.html#module."
     );
   }
 }
@@ -233,7 +233,7 @@ export function testTypesProperty(types: string, severity: Severity) {
     addFailure(
       "packageJson.types",
       severity,
-      "The package.json is missing a `types` property. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions"
+      "The package.json is missing a `types` property. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions."
     );
   } else if (!isValidFilePath(types)) {
     addFailure(
@@ -253,7 +253,7 @@ export function testExportsProperty(exports: string, severity: Severity) {
     addFailure(
       "packageJson.exports",
       severity,
-      "The package.json is missing an `exports` property. More information can be found at: https://nodejs.org/api/packages.html#exports"
+      "The package.json is missing an `exports` property. More information can be found at: https://nodejs.org/api/packages.html#exports."
     );
   }
 }
@@ -294,7 +294,7 @@ export function testCemPublished(
     addFailure(
       "packageJson.publishedCem",
       severity,
-      "The package.json is missing the `custom-elements.json` file in the `files` property. More information can be found at:"
+      "The package.json is missing the `custom-elements.json` file in the `files` property. More information can be found at: https://docs.npmjs.com/cli/v10/configuring-npm/package-json?v=true#files."
     );
   }
 }

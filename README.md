@@ -4,9 +4,9 @@
 
 </div>
 
-# WC Toolkit CEM Validator
+# WC Toolkit - CEM Validator
 
-This tool is designed to validate key aspects of your project to ensure proper integration with tools.
+This tool is designed to validate key aspects of your project to ensure accurate documentation and proper integration with tools.
 
 
 ## Installation
@@ -111,13 +111,13 @@ type Rules = {
 ```
 
 
-<div style="text-align: center; margin-top: 32px;">
+<!-- <div style="text-align: center; margin-top: 32px;">
   <a href="https://stackblitz.com/edit/stackblitz-starters-57ju3afb?file=README.md" target="_blank">
     <img
       alt="Open in StackBlitz"
       src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
     />
   </a>
-</div>
+</div> -->
 
 Check out the [documentation](https://wc-toolkit.com/cem-utilities/cem-validator) to see how to configure this to meet your project's needs.
