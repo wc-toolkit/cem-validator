@@ -1,5 +1,11 @@
 # @wc-toolkit/cem-validator
 
+## 1.0.2
+
+### Patch Changes
+
+- 3dada39: fixed `publishedCem` config
+
 ## 1.0.1
 
 ### Patch Changes
