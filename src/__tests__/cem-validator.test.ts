@@ -111,7 +111,7 @@ describe("Validate CEM", () => {
         // Arrange
 
         // Act
-        testComponentModulePath('TestComponent', 'src/test.js', 'warning');
+        testComponentModulePath("TestComponent", "src/test.js", "warning");
 
         // Assert
         expect(failures.length).toBe(1);
@@ -121,12 +121,48 @@ describe("Validate CEM", () => {
         // Arrange
 
         // Act
-        testComponentModulePath('TestComponent', '/__tests__/packageJson/default-package.json', 'warning');
+        testComponentModulePath(
+          "TestComponent",
+          "/__tests__/packageJson/default-package.json",
+          "warning"
+        );
 
         // Assert
         console.log(failures);
         expect(failures.length).toBe(0);
       });
+    });
+  });
+
+  describe("Validation Severity", () => {
+    test("should add warning when `severity` is 'warning'", async () => {
+      // Arrange
+
+      // Act
+      await testSchemaVersion(testManifest.schemaVersion, "warning");
+      const warnings = failures.filter((x) => x.severity === "warning");
+
+      // Assert
+      expect(warnings.length).toBe(1);
+    });
+    test("should add error when `severity` is 'error'", async () => {
+      // Arrange
+
+      // Act
+      await testSchemaVersion(testManifest.schemaVersion, "error");
+      const errors = failures.filter((x) => x.severity === "error");
+
+      // Assert
+      expect(errors.length).toBe(1);
+    });
+    test("should add nothing when `severity` is 'off'", async () => {
+      // Arrange
+
+      // Act
+      await testSchemaVersion(testManifest.schemaVersion, "warning");
+
+      // Assert
+      expect(failures.length).toBe(1);
     });
   });
 });
