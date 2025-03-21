@@ -91,6 +91,8 @@ type Rules = {
     exports?: Severity;
     /** Is the `customElements` property properly configured */
     customElementsProperty?: Severity;
+    /** Is the Custom Elements Manifest included in the published package */
+    publishedCem?: Severity;
   }
   /** Checks if the `customElementsManifest` is valid */
   manifest?: {
