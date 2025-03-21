@@ -80,7 +80,7 @@ type Rules = {
   /** Checks if the package.json file is appropriately configured */
   packageJson?: {
     /** Is `type` property set to "module" */
-    moduleType?: Severity;
+    packageType?: Severity;
     /** Is `main` property set with a valid file path */
     main?: Severity;
     /** Is `module` property set with a valid file path */

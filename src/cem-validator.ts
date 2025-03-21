@@ -21,7 +21,7 @@ let userOptions: CemValidatorOptions = {
   cemFileName: "custom-elements.json",
   rules: {
     packageJson: {
-      moduleType: "warning",
+      packageType: "warning",
       main: "warning",
       module: "warning",
       types: "warning",
@@ -102,7 +102,7 @@ export function testPackageJson(packageJson: any) {
     );
     return;
   }
-  testPackageType(packageJson.type, rules.moduleType!);
+  testPackageType(packageJson.type, rules.packageType!);
   testMainProperty(packageJson.main, rules.main!);
   testModuleProperty(packageJson.module, rules.module!);
   testTypesProperty(packageJson.types, rules.types!);
@@ -113,7 +113,7 @@ export function testPackageJson(packageJson: any) {
   );
   testCemPublished(
     packageJson.files,
-    userOptions.cemFileName!,
+    userOptions.rules!.packageJson!.publishedCem!,
     rules.customElementsProperty!
   );
 }
