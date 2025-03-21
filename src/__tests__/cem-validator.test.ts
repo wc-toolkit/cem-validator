@@ -13,7 +13,6 @@ import {
 import testManifest from "./manifests/test-cem.json";
 import defaultPackageJson from "./packageJson/default-package.json";
 import type * as cem from "custom-elements-manifest";
-import { deepMerge } from "@wc-toolkit/cem-utilities";
 
 describe("Validate CEM", () => {
   afterEach(() => {
