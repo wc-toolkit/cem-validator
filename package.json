@@ -1,7 +1,7 @@
 {
   "name": "@wc-toolkit/cem-validator",
   "version": "1.0.0",
-  "description": "This tool is designed to update module paths in your Custom Elements Manifest to the final output targets.",
+  "description": "A tool to validate the content of the Custom Elements Manifest to ensure the CEM and components are properly configured.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -36,12 +36,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wc-toolkit/lazy-loader.git"
+    "url": "git+https://github.com/wc-toolkit/cem-validator.git"
   },
   "bugs": {
-    "url": "https://github.com/wc-toolkit/lazy-loader/issues"
+    "url": "https://github.com/wc-toolkit/cem-validator/issues"
   },
-  "homepage": "https://wc-toolkit.com/documentation/lazy-loader",
+  "homepage": "https://wc-toolkit.com/documentation/cem-validator",
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
     "@custom-elements-manifest/analyzer": "^0.10.4",
