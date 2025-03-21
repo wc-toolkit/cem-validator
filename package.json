@@ -41,7 +41,7 @@
   "bugs": {
     "url": "https://github.com/wc-toolkit/cem-validator/issues"
   },
-  "homepage": "https://wc-toolkit.com/documentation/cem-validator",
+  "homepage": "https://wc-toolkit.com/cem-utilities/cem-validator",
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
     "@custom-elements-manifest/analyzer": "^0.10.4",
@@ -65,6 +65,8 @@
     "web-components",
     "components",
     "cem",
+    "cem-validator",
+    "wc-toolkit",
     "@wc-toolkit/cem-validator"
   ],
   "lint-staged": {
