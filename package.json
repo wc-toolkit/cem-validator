@@ -1,6 +1,6 @@
 {
   "name": "@wc-toolkit/cem-validator",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "This tool is designed to update module paths in your Custom Elements Manifest to the final output targets.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
