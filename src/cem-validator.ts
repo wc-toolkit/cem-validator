@@ -113,8 +113,8 @@ export function testPackageJson(packageJson: any) {
   );
   testCemPublished(
     packageJson.files,
+    userOptions.cemFileName!,
     userOptions.rules!.packageJson!.publishedCem!,
-    rules.customElementsProperty!
   );
 }
 
