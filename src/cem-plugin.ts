@@ -1,13 +1,12 @@
-import { resolveModulePaths } from "./module-path-resolver.js";
+import { validateCem } from "./cem-validator.js";
 import type { PackageLinkPhaseParams } from "@custom-elements-manifest/analyzer";
-import type { ModulePathResolverOptions } from "./types.js";
+import type { CemValidatorOptions } from "./types.js";
 
-export function modulePathResolverPlugin(options: ModulePathResolverOptions) {
+export function cemValidatorPlugin(options: CemValidatorOptions = {}) {
   return {
-    name: "@wc-toolkit/module-path-resolver",
+    name: "@wc-toolkit/cem-validator",
     packageLinkPhase({ customElementsManifest }: PackageLinkPhaseParams) {
-      options.usedByPlugin = true;
-      resolveModulePaths(customElementsManifest, options);
+      validateCem(customElementsManifest, options);
     },
   };
 }

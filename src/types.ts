@@ -1,41 +1,61 @@
-export type ModulePathResolverOptions = {
-  /** The template for creating the component's import path */
-  modulePathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** The template for creating the component's import path */
-  definitionPathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** The template for creating the component's import path */
-  typeDefinitionPathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** Path to output directory */
-  outdir?: string;
-  /** The of the loader file */
-  fileName?: string;
-  /** Class names of any components you would like to exclude from the custom data */
-  exclude?: string[];
+export type CemValidatorOptions = {
+  /** The path to the `package.json` file */
+  packageJsonPath?: string;
+  /** Custom Elements Manifest file name */
+  cemFileName?: string;
+  /** This will log errors rather throw an exception */
+  logErrors?: boolean;
   /** Enables logging during the component loading process */
   debug?: boolean;
   /** Prevents plugin from executing */
   skip?: boolean;
-  /** @internal Used to indicate if this is used as a CEM a plugin */
-  usedByPlugin?: boolean;
+  /** Rule configurations */
+  rules?: Rules;
+};
+
+/** The severity level for each rule */
+export type Severity = "off" | "warning" | "error";
+
+export type Rules = {
+  /** Checks if the package.json file is appropriately configured */
+  packageJson?: {
+    /** Is `type` property set to "module" */
+    moduleType?: Severity;
+    /** Is `main` property set with a valid file path */
+    main?: Severity;
+    /** Is `module` property set with a valid file path */
+    module?: Severity;
+    /** Is `types` property set with a valid file path */
+    types?: Severity;
+    /** Does the package have a `exports` property configured */
+    exports?: Severity;
+    /** Is the `customElements` property properly configured */
+    customElementsProperty?: Severity;
+    /** Is the Custom Elements Manifest included in the published package */
+    publishedCem?: Severity;
+  }
+  /** Checks if the `customElementsManifest` is valid */
+  manifest?: {
+    /** Is the manifest using the latest schema version */
+    schemaVersion?: Severity;
+    /** Does the component have a valid module path */
+    modulePath?: Severity;
+    /** Does the component have a valid definition path */
+    definitionPath?: Severity;
+    /** Does the element have a valid type definition path */
+    typeDefinitionPath?: Severity;
+    /** Does the component export all necessary types */
+    exportTypes?: Severity;
+    /** Does the component have a tag name defined */
+    tagName?: Severity;
+  }
+};
+
+export type RuleFailure = {
+  /** The rule that failed */
+  rule: string;
+  /** The severity of the rule */
+  severity: Severity;
+  /** The message of the rule */
+  message: string;
 };

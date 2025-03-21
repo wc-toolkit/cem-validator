@@ -1,16 +1,29 @@
-import fs from "fs";
-import path from "path";
-
-export function createOutDir(outDir: string) {
-  if (outDir !== "./" && !fs.existsSync(outDir)) {
-    fs.mkdirSync(outDir, { recursive: true });
-  }
+export function isValidFilePath(filePath: string): boolean {
+  const regex = /^(\/|\.\/|\.\.\/|[a-zA-Z]:[\\/]|\.\\|\.\.\\)([a-zA-Z0-9_\-./\\]+)$/;
+  return regex.test(filePath);
 }
 
-export function saveFile(outDir: string, fileName: string, contents: string) {
-  const outputPath = path.join(outDir, fileName);
+export function isLatestPackageVersion(
+  currentVersion: string,
+  latestVersion: string
+): boolean {
+  const isAlphaOrBeta = currentVersion.includes("-");
+  const parseVersion = (version: string) => version.split(".").map(x => parseInt(x));
 
-  fs.writeFileSync(outputPath, contents);
+  const [currMajor, currMinor, currPatch] = parseVersion(currentVersion);
+  const [latestMajor, latestMinor, latestPatch] = parseVersion(latestVersion);
 
-  return outputPath;
+  if (currMajor !== latestMajor) {
+    return currMajor > latestMajor;
+  }
+  if (currMinor !== latestMinor) {
+    return currMinor > latestMinor;
+  }
+  if (currPatch !== latestPatch) {
+    return currPatch > latestPatch;
+  }
+  if (currPatch !== latestPatch && isAlphaOrBeta) {
+    return currPatch > latestPatch;
+  }
+  return !isAlphaOrBeta;
 }

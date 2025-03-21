@@ -1,21 +1,20 @@
 <div align="center">
   
-![workbench with tools, html, css, javascript, and download icon](https://raw.githubusercontent.com/wc-toolkit/module-path-resolver/refs/heads/main/assets/wc-toolkit_module-path-resolver.png)
+![workbench with tools, html, css, javascript, and download icon](https://raw.githubusercontent.com/wc-toolkit/cem-validator/refs/heads/main/assets/wc-toolkit_cem-validator.png)
 
 </div>
 
-# WC Toolkit CEM Module Path Resolve
+# WC Toolkit CEM Validator
 
-This tool is designed to update module paths in your Custom Elements Manifest to the output target.
+This tool is designed to validate key aspects of your project to ensure proper integration with tools.
 
-The goal is to make the paths in the CEM as accurate as possible so tools can accurately reference these.
 
 ## Installation
 
 To install the package, use the following command:
 
 ```bash
-npm install -D @wc-toolkit/module-path-resolver
+npm install -D @wc-toolkit/cem-validator
 ```
 
 ## Usage
@@ -30,12 +29,12 @@ This package includes two ways to update the Custom Elements Manifest:
 ```ts
 // my-script.ts
 
-import { resolveModulePaths, type ModulePathResolverOptions } from "@wc-toolkit/module-path-resolver";
+import { validateCem, type CemValidatorOptions } from "@wc-toolkit/cem-validator";
 import manifest from "./path/to/custom-elements.json" with { type: 'json' };
 
-const options: ModulePathResolverOptions = {...};
+const options: CemValidatorOptions = {...};
 
-resolveModulePaths(manifest, options);
+validateCem(manifest, options);
 ```
 
 ### CEM Analyzer
@@ -45,13 +44,13 @@ The plugin can be added to the [Custom Elements Manifest Analyzer configuration 
 ```js
 // custom-elements-manifest.config.js
 
-import { modulePathResolverPlugin } from "@wc-toolkit/module-path-resolver";
+import { cemValidatorPlugin } from "@wc-toolkit/cem-validator";
 
 const options = {...};
 
 export default {
   plugins: [
-    modulePathResolverPlugin(options)
+    cemValidatorPlugin(options)
   ],
 };
 ```
@@ -59,101 +58,58 @@ export default {
 ## Configuration
 
 ```ts
-type ModulePathResolverOptions = {
-  /** The template for creating the component's import path */
-  modulePathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** The template for creating the component's import path */
-  definitionPathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** The template for creating the component's import path */
-  typeDefinitionPathTemplate?: (
-    /** The current value in the `path` property (typically to the source code) */
-    modulePath: string,
-    /** The name of the component */
-    name: string,
-    /** The tag name of the component */
-    tagName?: string
-  ) => string;
-  /** Path to output directory */
-  outdir?: string;
-  /** The of the loader file */
-  fileName?: string;
-  /** Class names of any components you would like to exclude from the custom data */
-  exclude?: string[];
+type CemValidatorOptions = {
+  /** The path to the `package.json` file */
+  packageJsonPath?: string;
+  /** Custom Elements Manifest file name */
+  cemFileName?: string;
+  /** This will log errors rather throw an exception */
+  logErrors?: boolean;
   /** Enables logging during the component loading process */
   debug?: boolean;
   /** Prevents plugin from executing */
   skip?: boolean;
+  /** Rule configurations */
+  rules?: Rules;
+};
+
+/** The severity level for each rule */
+type Severity = "off" | "warning" | "error";
+
+type Rules = {
+  /** Checks if the package.json file is appropriately configured */
+  packageJson?: {
+    /** Is `type` property set to "module" */
+    moduleType?: Severity;
+    /** Is `main` property set with a valid file path */
+    main?: Severity;
+    /** Is `module` property set with a valid file path */
+    module?: Severity;
+    /** Is `types` property set with a valid file path */
+    types?: Severity;
+    /** Does the package have a `exports` property configured */
+    exports?: Severity;
+    /** Is the `customElements` property properly configured */
+    customElementsProperty?: Severity;
+  }
+  /** Checks if the `customElementsManifest` is valid */
+  manifest?: {
+    /** Is the manifest using the latest schema version */
+    schemaVersion?: Severity;
+    /** Does the component have a valid module path */
+    modulePath?: Severity;
+    /** Does the component have a valid definition path */
+    definitionPath?: Severity;
+    /** Does the element have a valid type definition path */
+    typeDefinitionPath?: Severity;
+    /** Does the component export all necessary types */
+    exportTypes?: Severity;
+    /** Does the component have a tag name defined */
+    tagName?: Severity;
+  }
 };
 ```
 
-## Module Path
-
-This is the path to the component's final output location.
-
-> **NOTE:** If you are not transpiling or building your components and your source file is in the same place as the final output, you probably don't need to add this.
-
-```ts
-{
-  // ex: module moved from `./src/components/alert/alert.ts` => `./dist/components/alert/alert.js`
-  modulePathTemplate(modulePath, name, tagName) => modulePath.replace('src', 'dist').replace('.ts', '.js');
-
-  // ex: module moved from `packages/my-button/src/component/my-button.ts` => `dist/components/my-button.js`
-  modulePathTemplate(modulePath, name, tagName) => `./dist/components/${tagName}.js`;
-
-  // ex: similar components are now grouped into the same module
-  modulePathTemplate(modulePath, name, tagName) => {
-    switch (tagName) {
-      case 'my-tab':
-      case 'my-tabs':
-      case 'my-tabpanel':
-        return `./dist/components/tabs/${className}.js`;
-      case 'my-select':
-      case 'my-option':
-        return `./dist/components/select/${className}.js`;
-      default:
-        return `./dist/components/${tagName}/${className}.js`;
-    }
-  }
-}
-```
-
-## Definition Path
-
-This is the path to where the component is defined either through the traditional method (`customElements.define('my-component', MyComponent)`), a decorator, or some other custom approach.
-
-> **NOTE:** Your analyzer may already be doing this for you. You can confirm this by searching your manifest for any `exports` with `"kind": "custom-element-definition"`.
-
-```ts
-{
-  definitionPathTemplate(modulePath, name, tagName) => `./dist/${tagName}/index.js`
-}
-```
-
-## Type Definition Path
-
-This sets a _non-standard_ property next to the module path so tools can easily reference them.
-
-> **NOTE:** This is only needed of the types are not co-located with the module or if it follows a different naming convention from the component module.
-
-```ts
-{
-  typeDefinitionPathTemplate(modulePath, name, tagName) => `./types/components/${tagName}.d.ts`
-}
-```
 
 <div style="text-align: center; margin-top: 32px;">
   <a href="https://stackblitz.com/edit/stackblitz-starters-57ju3afb?file=README.md" target="_blank">
@@ -164,4 +120,4 @@ This sets a _non-standard_ property next to the module path so tools can easily 
   </a>
 </div>
 
-Check out the [documentation](https://wc-toolkit.com/documentation/module-path-resolver) to see how to configure this to meet your project's needs.
+Check out the [documentation](https://wc-toolkit.com/cem-utilities/cem-validator) to see how to configure this to meet your project's needs.

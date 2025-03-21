@@ -1,5 +1,5 @@
 {
-  "name": "@wc-toolkit/module-path-resolver",
+  "name": "@wc-toolkit/cem-validator",
   "version": "0.0.0",
   "description": "This tool is designed to update module paths in your Custom Elements Manifest to the final output targets.",
   "main": "./dist/index.cjs",
@@ -47,7 +47,7 @@
     "@custom-elements-manifest/analyzer": "^0.10.4",
     "@eslint/js": "^9.19.0",
     "@types/node": "^20.14.12",
-    "@wc-toolkit/cem-utilities": "^1.0.0",
+    "@wc-toolkit/cem-utilities": "^1.2.0",
     "comment-parser": "^1.4.1",
     "custom-elements-manifest": "2.1.0",
     "eslint": "^9.19.0",
@@ -65,7 +65,7 @@
     "web-components",
     "components",
     "cem",
-    "@wc-toolkit/module-path-resolver"
+    "@wc-toolkit/cem-validator"
   ],
   "lint-staged": {
     "*.ts": "eslint --cache --fix",
