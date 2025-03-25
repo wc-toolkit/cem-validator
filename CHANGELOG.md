@@ -1,5 +1,11 @@
 # @wc-toolkit/cem-validator
 
+## 1.0.3
+
+### Patch Changes
+
+- ba66da6: fixed error if no methods, properties, or events exist on components
+
 ## 1.0.2
 
 ### Patch Changes
