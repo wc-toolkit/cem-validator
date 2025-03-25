@@ -409,11 +409,11 @@ export function testComponentExportTypes(
     return;
   }
 
-  const eventTypes = getCustomEventDetailTypes(component);
-  const props = getComponentPublicProperties(component);
+  const eventTypes = getCustomEventDetailTypes(component) || [];
+  const props = getComponentPublicProperties(component) || [];
   const propTypes = props.map((prop) => prop.type?.text);
 
-  const methods = getComponentPublicMethods(component);
+  const methods = getComponentPublicMethods(component) || [];
   const methodTypes = methods
     ?.map((method) => method.parameters?.map((param) => param?.type?.text))
     .flat();
