@@ -1,6 +1,6 @@
 {
   "name": "@wc-toolkit/cem-validator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A tool to validate the content of the Custom Elements Manifest to ensure the CEM and components are properly configured.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
