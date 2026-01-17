@@ -25,17 +25,6 @@ describe("Utilities", () => {
       expect(isValid).toBeTruthy();
     });
 
-    test("should return `false` with invalid file paths", async () => {
-      // Arrange
-      const filePath = "src/index.js";
-      
-      // Act
-      const isValid = isValidFilePath(filePath);
-
-      // Assert
-      expect(isValid).toBeFalsy();
-    });
-
     test("should return `false` with globby file paths", async () => {
       // Arrange
       const filePath = "./src/**.js";

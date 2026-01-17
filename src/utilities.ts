@@ -1,5 +1,5 @@
 export function isValidFilePath(filePath: string): boolean {
-  const regex = /^(\/|\.\/|\.\.\/|[a-zA-Z]:[\\/]|\.\\|\.\.\\)([a-zA-Z0-9_\-./\\]+)$/;
+  const regex = /^(\/|\.\/|\.\.\/|[a-zA-Z]:[\\/]|\.\\|\.\.\\)?([a-zA-Z0-9_\-./\\]+)$/;
   return regex.test(filePath);
 }
 

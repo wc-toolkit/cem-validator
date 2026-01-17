@@ -5,7 +5,7 @@ import {
   testModuleProperty,
   testPackageType,
   testTypesProperty,
-  testCustomElementsProperty,
+  testCemPublished,
   testSchemaVersion,
   testComponents,
   testComponentModulePath,
@@ -41,16 +41,6 @@ describe("Validate CEM", () => {
       expect(failures.length).toBe(1);
     });
 
-    test("should add warning when `module` property is not set", async () => {
-      // Arrange
-
-      // Act
-      testModuleProperty(defaultPackageJson.main, "warning");
-
-      // Assert
-      expect(failures.length).toBe(1);
-    });
-
     test("should add warning when `types` property is not set", async () => {
       // Arrange
 
@@ -62,26 +52,166 @@ describe("Validate CEM", () => {
       expect(failures.length).toBe(1);
     });
 
-    test("should add warning when `exports` property is not set", async () => {
-      // Arrange
+    describe("testCemPublished", () => {
+      test("should not add error when CEM filename is in files array", () => {
+        // Arrange
+        const files = ["dist", "custom-elements.json"];
+        const customElements = "./custom-elements.json";
+        const cemFileName = "custom-elements.json";
 
-      // Act
-      // @ts-expect-error we know this is undefined
-      testTypesProperty(defaultPackageJson.exports, "warning");
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
 
-      // Assert
-      expect(failures.length).toBe(1);
-    });
+        // Assert
+        expect(failures.length).toBe(0);
+      });
 
-    test("should add warning when `exports` property is not set", async () => {
-      // Arrange
+      test("should not add error when CEM is in subdirectory listed in files array", () => {
+        // Arrange
+        const files = ["dist"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
 
-      // Act
-      // @ts-expect-error we know this is undefined
-      testCustomElementsProperty(defaultPackageJson.customElements, "error");
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
 
-      // Assert
-      expect(failures.length).toBe(1);
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should not add error when CEM is in subdirectory with trailing slash in files array", () => {
+        // Arrange
+        const files = ["dist/"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should add error when CEM is not in files array", () => {
+        // Arrange
+        const files = ["src", "README.md"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(1);
+        expect(failures[0].rule).toBe("packageJson.publishedCem");
+        expect(failures[0].severity).toBe("error");
+      });
+
+      test("should add error when CEM is in subdirectory not listed in files array", () => {
+        // Arrange
+        const files = ["build"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(1);
+        expect(failures[0].rule).toBe("packageJson.publishedCem");
+      });
+
+      test("should not add error when customElements is not defined", () => {
+        // Arrange
+        const files = ["dist"];
+        const customElements = undefined;
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should not add error when files array is empty", () => {
+        // Arrange
+        const files: string[] = [];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should not add error when severity is 'off'", () => {
+        // Arrange
+        const files = ["src"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "off");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should handle CEM in root directory", () => {
+        // Arrange
+        const files = ["custom-elements.json"];
+        const customElements = "custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should handle CEM path with ./ prefix", () => {
+        // Arrange
+        const files = ["./dist"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should handle nested subdirectories", () => {
+        // Arrange
+        const files = ["dist/lib"];
+        const customElements = "./dist/lib/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "error");
+
+        // Assert
+        expect(failures.length).toBe(0);
+      });
+
+      test("should add warning when severity is 'warning'", () => {
+        // Arrange
+        const files = ["src"];
+        const customElements = "./dist/custom-elements.json";
+        const cemFileName = "custom-elements.json";
+
+        // Act
+        testCemPublished(files, customElements, cemFileName, "warning");
+
+        // Assert
+        expect(failures.length).toBe(1);
+        expect(failures[0].severity).toBe("warning");
+      });
     });
   });
 
@@ -104,7 +234,8 @@ describe("Validate CEM", () => {
         testComponents(testManifest as cem.Package);
 
         // Assert
-        expect(failures.length).toBe(5);
+        console.log(failures);
+        expect(failures.length).toBe(4);
       });
 
       test("should add warning when module path is invalid", async () => {

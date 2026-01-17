@@ -98,21 +98,24 @@ export function testPackageJson(packageJson: any) {
     addFailure(
       "packageJson",
       "error",
-      "The package.json file is missing or invalid."
+      "The package.json file is missing or invalid.",
     );
     return;
   }
   testPackageType(packageJson.type, rules.packageType!);
-  testMainProperty(packageJson.main, rules.main!);
-  testModuleProperty(packageJson.module, rules.module!);
-  testTypesProperty(packageJson.types, rules.types!);
-  testExportsProperty(packageJson.exports, rules.exports!);
+  if (!packageJson.exports && !packageJson.browser) {
+    testMainProperty(packageJson.main, rules.main!);
+    testTypesProperty(packageJson.types, rules.types!);
+  } else {
+    testExportsProperty(packageJson.exports, rules.exports!);
+  }
   testCustomElementsProperty(
     packageJson.customElements,
-    rules.customElementsProperty!
+    rules.customElementsProperty!,
   );
   testCemPublished(
     packageJson.files,
+    packageJson.customElements,
     userOptions.cemFileName!,
     userOptions.rules!.packageJson!.publishedCem!,
   );
@@ -121,7 +124,7 @@ export function testPackageJson(packageJson: any) {
 export async function testManifest(manifest: cem.Package) {
   await testSchemaVersion(
     manifest.schemaVersion,
-    userOptions.rules!.manifest!.schemaVersion!
+    userOptions.rules!.manifest!.schemaVersion!,
   );
   testComponents(manifest);
 }
@@ -140,7 +143,7 @@ function getDefinitions(manifest: cem.Package): Map<string, string> {
   manifest.modules.forEach((mod) =>
     mod.exports
       ?.filter((x) => x.kind === "custom-element-definition")
-      ?.forEach((x) => definitions.set(x.name, mod.path))
+      ?.forEach((x) => definitions.set(x.name, mod.path)),
   );
   return definitions;
 }
@@ -156,23 +159,23 @@ export function testComponents(manifest: cem.Package) {
         testComponentTagName(
           component.name,
           (component as cem.CustomElement).tagName || "",
-          rules.tagName!
+          rules.tagName!,
         );
         testComponentModulePath(component.name, module.path, rules.modulePath!);
         testComponentDefinitionPath(
           component.name,
           definitions.get(component.name) || "",
-          rules.definitionPath!
+          rules.definitionPath!,
         );
         testComponentTypeDefinitionPath(
           component.name,
           (module as any)["typeDefinitionPath"],
-          rules.typeDefinitionPath!
+          rules.typeDefinitionPath!,
         );
         testComponentExportTypes(
           component as unknown as Component,
           module.exports?.map((x) => x.declaration?.name) || [],
-          rules.exportTypes!
+          rules.exportTypes!,
         );
       });
   });
@@ -187,7 +190,7 @@ export function testPackageType(moduleType: string, severity: Severity) {
     addFailure(
       "packageJson.moduleType",
       severity,
-      "Package `type` is not 'module'. More information can be found at: https://nodejs.org/api/packages.html#type."
+      "Package `type` is not 'module'. More information can be found at: https://nodejs.org/api/packages.html#type.",
     );
   }
 }
@@ -203,23 +206,7 @@ export function testMainProperty(main: string, severity: Severity) {
     addFailure(
       "packageJson.main",
       severity,
-      "Invalid file path is set to `main` property. More information can be found at: https://nodejs.org/api/packages.html#main."
-    );
-  }
-}
-
-export function testModuleProperty(module: string, severity: Severity) {
-  if (severity === "off") {
-    return;
-  }
-
-  if (!module) {
-    addFailure("packageJson.module", severity, "Missing `module` property.");
-  } else if (!isValidFilePath(module)) {
-    addFailure(
-      "packageJson.module",
-      severity,
-      "Invalid file path is set to `module` property. More information can be found at: https://nodejs.org/api/packages.html#module."
+      "Invalid file path is set to `main` property. More information can be found at: https://nodejs.org/api/packages.html#main.",
     );
   }
 }
@@ -233,13 +220,13 @@ export function testTypesProperty(types: string, severity: Severity) {
     addFailure(
       "packageJson.types",
       severity,
-      "The package.json is missing a `types` property. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions."
+      "The package.json is missing a `types` property. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions.",
     );
   } else if (!isValidFilePath(types)) {
     addFailure(
       "packageJson.types",
       severity,
-      "Invalid file path is set to `types` property in the package.json. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions"
+      "Invalid file path is set to `types` property in the package.json. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions",
     );
   }
 }
@@ -253,14 +240,14 @@ export function testExportsProperty(exports: string, severity: Severity) {
     addFailure(
       "packageJson.exports",
       severity,
-      "The package.json is missing an `exports` property. More information can be found at: https://nodejs.org/api/packages.html#exports."
+      "The package.json is missing an `exports` property. More information can be found at: https://nodejs.org/api/packages.html#exports.",
     );
   }
 }
 
 export function testCustomElementsProperty(
   customElements: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -270,38 +257,55 @@ export function testCustomElementsProperty(
     addFailure(
       "packageJson.customElements",
       severity,
-      "The package.json is missing the `customElements` property. You can find more information at: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#referencing-manifests-from-npm-packages"
+      "The package.json is missing the `customElements` property. You can find more information at: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#referencing-manifests-from-npm-packages",
     );
   } else if (!isValidFilePath(customElements)) {
     addFailure(
       "packageJson.customElements",
       severity,
-      "Invalid file path is set to `customElements` property."
+      "Invalid file path is set to `customElements` property.",
     );
   }
 }
 
 export function testCemPublished(
   files: string[],
+  customElements: string = "",
   cemFileName: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off" || !files?.length) {
     return;
   }
   const hasCem = files.some((file) => file.endsWith(cemFileName));
-  if (!hasCem) {
-    addFailure(
-      "packageJson.publishedCem",
-      severity,
-      "The package.json is missing the `custom-elements.json` file in the `files` property. More information can be found at: https://docs.npmjs.com/cli/v10/configuring-npm/package-json?v=true#files."
-    );
+  if (hasCem || !customElements) {
+    return;
   }
+
+  const cemRawPath = customElements.replace("./", "");
+
+  const isInSubdirectory = cemRawPath.includes("/");
+
+  if (isInSubdirectory) {
+    const cemDirectory = cemRawPath.split("/").slice(0, -1).join("/") + "/";
+    const isDirectoryIncluded = files.some((file) =>
+      cemDirectory.startsWith(file.replace("./", "")),
+    );
+    if (isDirectoryIncluded) {
+      return;
+    }
+  }
+
+  addFailure(
+    "packageJson.publishedCem",
+    severity,
+    "The package.json is missing the `custom-elements.json` file in the `files` property. More information can be found at: https://docs.npmjs.com/cli/v10/configuring-npm/package-json?v=true#files.",
+  );
 }
 
 export async function testSchemaVersion(
   schemaVersion: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -311,7 +315,7 @@ export async function testSchemaVersion(
     addFailure(
       "manifest.schemaVersion",
       severity,
-      "The manifest is missing the `schemaVersion` property. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning"
+      "The manifest is missing the `schemaVersion` property. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning",
     );
     return;
   }
@@ -320,7 +324,7 @@ export async function testSchemaVersion(
     addFailure(
       "manifest.schemaVersion",
       severity,
-      `The manifest schema version is outdated. The latest version is ${CURRENT_CEM_VERSION}. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning`
+      `The manifest schema version is outdated. The latest version is ${CURRENT_CEM_VERSION}. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning`,
     );
   }
 }
@@ -328,7 +332,7 @@ export async function testSchemaVersion(
 export function testComponentModulePath(
   componentName: string,
   modulePath: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -351,7 +355,7 @@ export function testComponentModulePath(
 export function testComponentDefinitionPath(
   componentName: string,
   definitionPath: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -377,7 +381,7 @@ export function testComponentDefinitionPath(
 export function testComponentTypeDefinitionPath(
   componentName: string,
   definitionPath: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -403,7 +407,7 @@ export function testComponentTypeDefinitionPath(
 export function testComponentExportTypes(
   component: Component,
   exports: string[],
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -419,7 +423,7 @@ export function testComponentExportTypes(
     .flat();
 
   const allTypes = [...eventTypes, ...propTypes, ...methodTypes].filter(
-    (type) => type && isNamedType(type)
+    (type) => type && isNamedType(type),
   );
 
   allTypes.forEach((type) => {
@@ -427,7 +431,7 @@ export function testComponentExportTypes(
       addFailure(
         "manifest.exportTypes",
         severity,
-        `${component.name} is missing exported type "${type}".`
+        `${component.name} is missing exported type "${type}".`,
       );
     }
   });
@@ -436,7 +440,7 @@ export function testComponentExportTypes(
 export function testComponentTagName(
   componentName: string,
   tagName: string,
-  severity: Severity
+  severity: Severity,
 ) {
   if (severity === "off") {
     return;
@@ -446,7 +450,7 @@ export function testComponentTagName(
     addFailure(
       "manifest.tagName",
       severity,
-      `${componentName} is missing a tag name. You can add one by using the \`@tag\` and \`@tagName\` JSDoc tag.`
+      `${componentName} is missing a tag name. You can add one by using the \`@tag\` and \`@tagName\` JSDoc tag.`,
     );
   }
 }
