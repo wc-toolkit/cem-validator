@@ -33,7 +33,7 @@ export type Rules = {
     customElementsProperty?: Severity;
     /** Is the Custom Elements Manifest included in the published package */
     publishedCem?: Severity;
-  }
+  };
   /** Checks if the `customElementsManifest` is valid */
   manifest?: {
     /** Is the manifest using the latest schema version */
@@ -48,7 +48,7 @@ export type Rules = {
     exportTypes?: Severity;
     /** Does the component have a tag name defined */
     tagName?: Severity;
-  }
+  };
 };
 
 export type RuleFailure = {
