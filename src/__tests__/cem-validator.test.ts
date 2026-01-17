@@ -2,7 +2,6 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   failures,
   testMainProperty,
-  testModuleProperty,
   testPackageType,
   testTypesProperty,
   testCemPublished,
@@ -255,7 +254,7 @@ describe("Validate CEM", () => {
         testComponentModulePath(
           "TestComponent",
           "/__tests__/packageJson/default-package.json",
-          "warning"
+          "warning",
         );
 
         // Assert

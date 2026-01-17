@@ -8,7 +8,6 @@
 
 This tool is designed to validate key aspects of your project to ensure accurate documentation and proper integration with tools.
 
-
 ## Installation
 
 To install the package, use the following command:
@@ -93,7 +92,7 @@ type Rules = {
     customElementsProperty?: Severity;
     /** Is the Custom Elements Manifest included in the published package */
     publishedCem?: Severity;
-  }
+  };
   /** Checks if the `customElementsManifest` is valid */
   manifest?: {
     /** Is the manifest using the latest schema version */
@@ -108,10 +107,9 @@ type Rules = {
     exportTypes?: Severity;
     /** Does the component have a tag name defined */
     tagName?: Severity;
-  }
+  };
 };
 ```
-
 
 <!-- <div style="text-align: center; margin-top: 32px;">
   <a href="https://stackblitz.com/edit/stackblitz-starters-57ju3afb?file=README.md" target="_blank">
