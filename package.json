@@ -8,9 +8,9 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -23,7 +23,7 @@
     "changeset": "changeset add",
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "clean": "git clean -fdX",
-    "demo": "cd demo && npx http-server --cors",
+    "demo": "npm run build && node ./demo/validated.js",
     "deploy": "npm run build && npm publish",
     "format": "prettier . --write",
     "lint": "eslint 'src/**/*.ts'",
