@@ -1,5 +1,17 @@
 # @wc-toolkit/cem-validator
 
+## 1.1.0
+
+### Minor Changes
+
+- 0fcb64b: Added native JS type chacks to prevent false errors
+
+### Patch Changes
+
+- 0fcb64b: Fixed component definition path check
+- 0fcb64b: Updated color logging for errors
+- 0fcb64b: Fixed timing issue for CEM validation
+
 ## 1.0.4
 
 ### Patch Changes
