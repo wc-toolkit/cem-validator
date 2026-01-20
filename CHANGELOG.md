@@ -1,5 +1,15 @@
 # @wc-toolkit/cem-validator
 
+## 1.0.4
+
+### Patch Changes
+
+- 615d087: Fixed issue when CEM is included in a directory listed in `files` array, but not explicitly listed
+- 615d087: Removed `module` check as that is not a valid property in package.json
+- 615d087: Fixed issue when relative path names aren't provided
+- 06e638c: Added check to validate `exports` or `main`, but not both
+- 615d087: Added check for `browser` property when validating
+
 ## 1.0.3
 
 ### Patch Changes
