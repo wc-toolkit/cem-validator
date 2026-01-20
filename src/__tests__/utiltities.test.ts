@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isLatestPackageVersion, isValidFilePath } from "../utilities";
+import { isLatestPackageVersion, isValidFilePath, isNativeJSType, extractCustomEventType } from "../utilities";
 
 describe("Utilities", () => {
   describe("isValidFilePath", () => {
@@ -144,6 +144,100 @@ describe("Utilities", () => {
 
       // Assert
       expect(isLatest).toBeFalsy();
+    });
+  });
+
+  describe("isNativeJSType", () => {
+    test("should return true for primitive types", () => {
+      expect(isNativeJSType("string")).toBeTruthy();
+      expect(isNativeJSType("number")).toBeTruthy();
+      expect(isNativeJSType("boolean")).toBeTruthy();
+      expect(isNativeJSType("undefined")).toBeTruthy();
+      expect(isNativeJSType("null")).toBeTruthy();
+    });
+
+    test("should return true for built-in objects", () => {
+      expect(isNativeJSType("Object")).toBeTruthy();
+      expect(isNativeJSType("Array")).toBeTruthy();
+      expect(isNativeJSType("Date")).toBeTruthy();
+      expect(isNativeJSType("Promise")).toBeTruthy();
+      expect(isNativeJSType("Map")).toBeTruthy();
+      expect(isNativeJSType("Set")).toBeTruthy();
+    });
+
+    test("should return true for DOM types", () => {
+      expect(isNativeJSType("HTMLElement")).toBeTruthy();
+      expect(isNativeJSType("Element")).toBeTruthy();
+      expect(isNativeJSType("Node")).toBeTruthy();
+      expect(isNativeJSType("Document")).toBeTruthy();
+    });
+
+    test("should return true for event types", () => {
+      expect(isNativeJSType("MouseEvent")).toBeTruthy();
+      expect(isNativeJSType("KeyboardEvent")).toBeTruthy();
+      expect(isNativeJSType("FocusEvent")).toBeTruthy();
+      expect(isNativeJSType("Event")).toBeTruthy();
+      expect(isNativeJSType("CustomEvent")).toBeTruthy();
+    });
+
+    test("should return true for array types", () => {
+      expect(isNativeJSType("string[]")).toBeTruthy();
+      expect(isNativeJSType("number[]")).toBeTruthy();
+      expect(isNativeJSType("Array[]")).toBeTruthy();
+    });
+
+    test("should return true for generic types", () => {
+      expect(isNativeJSType("Promise<string>")).toBeTruthy();
+      expect(isNativeJSType("Set<boolean>")).toBeTruthy();
+      expect(isNativeJSType("Array<number>")).toBeTruthy();
+    });
+
+    test("should return true for union types with all native types", () => {
+      expect(isNativeJSType("string | number")).toBeTruthy();
+      expect(isNativeJSType("boolean | undefined")).toBeTruthy();
+      expect(isNativeJSType("Element | null")).toBeTruthy();
+    });
+
+    test("should return true for function types", () => {
+      expect(isNativeJSType("() => void")).toBeTruthy();
+      expect(isNativeJSType("(arg: string) => number")).toBeTruthy();
+    });
+
+    test("should return false for custom types", () => {
+      expect(isNativeJSType("MyCustomType")).toBeFalsy();
+      expect(isNativeJSType("UserProfile")).toBeFalsy();
+      expect(isNativeJSType("ComponentOptions")).toBeFalsy();
+    });
+
+    test("should return false for union types with custom types", () => {
+      expect(isNativeJSType("string | MyCustomType")).toBeFalsy();
+      expect(isNativeJSType("number | UserProfile")).toBeFalsy();
+    });
+
+    test("should return false for empty string", () => {
+      expect(isNativeJSType("")).toBeFalsy();
+    });
+  });
+
+  describe("extractCustomEventType", () => {
+    test("should extract type from CustomEvent generic", () => {
+      expect(extractCustomEventType("CustomEvent<MyEventDetail>")).toBe("MyEventDetail");
+      expect(extractCustomEventType("CustomEvent<UserData>")).toBe("UserData");
+    });
+
+    test("should return original value for non-CustomEvent types", () => {
+      expect(extractCustomEventType("MouseEvent")).toBe("MouseEvent");
+      expect(extractCustomEventType("string")).toBe("string");
+      expect(extractCustomEventType("MyCustomType")).toBe("MyCustomType");
+    });
+
+    test("should return empty string for undefined", () => {
+      expect(extractCustomEventType(undefined)).toBe("");
+      expect(extractCustomEventType("")).toBe("");
+    });
+
+    test("should handle complex generic types", () => {
+      expect(extractCustomEventType("CustomEvent<{ id: string; name: string }>")).toBe("{ id: string; name: string }");
     });
   });
 });

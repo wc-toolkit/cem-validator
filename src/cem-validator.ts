@@ -5,13 +5,11 @@ import {
   deepMerge,
   getComponentPublicMethods,
   getComponentPublicProperties,
-  getCustomEventDetailTypes,
-  JS_TYPES,
 } from "@wc-toolkit/cem-utilities";
 import fs from "fs";
 import * as cem from "custom-elements-manifest";
 import type { CemValidatorOptions, RuleFailure, Severity } from "./types.js";
-import { isLatestPackageVersion, isValidFilePath } from "./utilities.js";
+import { extractCustomEventType, isLatestPackageVersion, isNativeJSType, isValidFilePath, NATIVE_EVENT_TYPES } from "./utilities.js";
 
 const CURRENT_CEM_VERSION = "2.1.0";
 export let failures: RuleFailure[] = [];
@@ -40,7 +38,7 @@ let userOptions: CemValidatorOptions = {
   },
 };
 
-export function validateCem(cem: unknown, options: CemValidatorOptions = {}) {
+export async function validateCem(cem: unknown, options: CemValidatorOptions = {}) {
   log = new Logger(options.debug);
   if (options.skip) {
     log.yellow("[cem-validator] - Skipped");
@@ -51,14 +49,14 @@ export function validateCem(cem: unknown, options: CemValidatorOptions = {}) {
   const packageJson = getPackageJson(userOptions.packageJsonPath!);
 
   log.log("[cem-validator] - Validating Custom Elements Manifest...");
-  testRules(packageJson, cem);
+  await testRules(packageJson, cem);
   reportResults();
   log.green("[cem-validator] - Custom Elements Manifest validation complete.");
 }
 
-function testRules(packageJson: unknown, cem: unknown) {
+async function testRules(packageJson: unknown, cem: unknown) {
   testPackageJson(packageJson);
-  testManifest(cem as cem.Package);
+  await testManifest(cem as cem.Package);
 }
 
 function reportResults() {
@@ -84,10 +82,10 @@ function reportResults() {
       errorMessage += `  - ${error.rule}: ${error.message}\n`;
     });
 
-    if (userOptions.logErrors) {
-      log.red(errorMessage, true);
-    } else {
-      throw new Error(errorMessage);
+    log.red(errorMessage, true);
+
+    if (!userOptions.logErrors && errors.length) {
+      throw new Error(`Custom Elements Manifest validation failed due to errors (${errors.length}).`);
     }
   }
 }
@@ -164,7 +162,7 @@ export function testComponents(manifest: cem.Package) {
         testComponentModulePath(component.name, module.path, rules.modulePath!);
         testComponentDefinitionPath(
           component.name,
-          definitions.get(component.name) || "",
+          definitions.get((component as cem.CustomElement).tagName || "") || "",
           rules.definitionPath!,
         );
         testComponentTypeDefinitionPath(
@@ -366,7 +364,7 @@ export function testComponentDefinitionPath(
     failureMessage = `${componentName} is missing a definition path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
   } else if (
     definitionPath.endsWith(".ts") ||
-    !definitionPath.includes("src/")
+    definitionPath.includes("src/")
   ) {
     failureMessage = `${componentName} definition path does not appear to reference the output path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
   } else if (!isValidFilePath(definitionPath)) {
@@ -413,7 +411,17 @@ export function testComponentExportTypes(
     return;
   }
 
-  const eventTypes = getCustomEventDetailTypes(component) || [];
+  const eventTypes: string[] = []; 
+  component.events?.filter(x => 
+    x?.type?.text && 
+    !NATIVE_EVENT_TYPES.includes(x.type.text as any)
+  )?.forEach(event => {
+    const extractedType = extractCustomEventType(event.type?.text);
+    if (extractedType) {
+      eventTypes.push(extractedType);
+    }
+  });
+
   const props = getComponentPublicProperties(component) || [];
   const propTypes = props.map((prop) => prop.type?.text);
 
@@ -459,9 +467,10 @@ function isNamedType(type: string): boolean {
   return (
     !type.startsWith("HTML") &&
     !type.startsWith("SVG") &&
-    !JS_TYPES.has(type || "") &&
+    !isNativeJSType(type) &&
     !type.includes('"') &&
-    !type.includes("'")
+    !type.includes("'") &&
+    !type.includes("{")
   );
 }
 
