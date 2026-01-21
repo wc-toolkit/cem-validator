@@ -1,5 +1,11 @@
 # @wc-toolkit/cem-validator
 
+## 1.2.1
+
+### Patch Changes
+
+- 357ab8b: Updated type scheck to ignore object literals
+
 ## 1.2.0
 
 ### Minor Changes
