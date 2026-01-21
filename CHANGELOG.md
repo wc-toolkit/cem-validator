@@ -1,5 +1,16 @@
 # @wc-toolkit/cem-validator
 
+## 1.2.0
+
+### Minor Changes
+
+- 196a513: Added validation for complex types like function parameters
+
+### Patch Changes
+
+- 196a513: Fixed issue where array types were not correctly validated
+- 196a513: Added performance improvements
+
 ## 1.1.0
 
 ### Minor Changes
