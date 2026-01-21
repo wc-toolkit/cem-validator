@@ -301,7 +301,9 @@ export function getDefinitions(manifest: cem.Package): Map<string, string> {
 export function extractNamedTypes(type: string): string[] {
   if (!type) return [];
 
-  const cleaned = type.replace(/'[^']*'|"[^"]*"/g, " ");
+  const cleaned = type
+    .replace(/'[^']*'|"[^"]*"/g, " ")
+    .replace(/\{[^}]*\}/g, " ");
   const withoutParamNames = cleaned.replace(
     /\b[A-Za-z_$][A-Za-z0-9_$]*\s*:/g,
     " ",
