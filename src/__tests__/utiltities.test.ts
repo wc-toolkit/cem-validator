@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, test } from "vitest";
-import { isLatestPackageVersion, isValidFilePath, isNativeJSType, extractCustomEventType } from "../utilities";
+import { isLatestPackageVersion, isValidFilePath, isNativeJSType, extractCustomEventType, extractNamedTypes, isExportableTypeName, getMissingExportedTypes } from "../utilities";
 
 describe("Utilities", () => {
   describe("isValidFilePath", () => {
@@ -238,6 +239,48 @@ describe("Utilities", () => {
 
     test("should handle complex generic types", () => {
       expect(extractCustomEventType("CustomEvent<{ id: string; name: string }>")).toBe("{ id: string; name: string }");
+    });
+  });
+
+  describe("extractNamedTypes", () => {
+    test("should extract names from function types", () => {
+      expect(
+        extractNamedTypes(
+          "(option: WaOption, index: number) => TemplateResult | string | HTMLElement",
+        ),
+      ).toEqual(expect.arrayContaining(["WaOption", "TemplateResult", "string", "HTMLElement"]));
+    });
+
+    test("should treat array types as base names", () => {
+      expect(extractNamedTypes("WaOption[]")).toEqual(["WaOption"]);
+    });
+  });
+
+  describe("isExportableTypeName", () => {
+    test("should return false for native and ignored types", () => {
+      expect(isExportableTypeName("string")).toBeFalsy();
+      expect(isExportableTypeName("HTMLElement")).toBeFalsy();
+      expect(isExportableTypeName("CustomEvent")).toBeFalsy();
+      expect(isExportableTypeName("TemplateResult")).toBeFalsy();
+    });
+
+    test("should return true for custom types", () => {
+      expect(isExportableTypeName("WaOption")).toBeTruthy();
+      expect(isExportableTypeName("MyCustomType")).toBeTruthy();
+    });
+  });
+
+  describe("getMissingExportedTypes", () => {
+    test("should return missing types for component references", () => {
+      const component = {
+        events: [{ type: { text: "CustomEvent<WaEventDetail>" } }],
+        members: [],
+      } as any;
+
+      const exports = ["WaOption"];
+      const missing = getMissingExportedTypes(component, exports);
+      expect(missing).toContain("WaEventDetail");
+      expect(missing).not.toContain("WaOption");
     });
   });
 });
