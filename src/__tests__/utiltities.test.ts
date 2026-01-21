@@ -254,6 +254,12 @@ describe("Utilities", () => {
     test("should treat array types as base names", () => {
       expect(extractNamedTypes("WaOption[]")).toEqual(["WaOption"]);
     });
+
+    test("should ignore object literal members", () => {
+      expect(
+        extractNamedTypes("{ top: number; left: number } | undefined"),
+      ).toEqual(["undefined"]);
+    });
   });
 
   describe("isExportableTypeName", () => {
