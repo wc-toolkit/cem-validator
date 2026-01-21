@@ -3,15 +3,11 @@ import { Logger } from "./logger.js";
 import {
   Component,
   deepMerge,
-  getComponentPublicMethods,
-  getComponentPublicProperties,
 } from "@wc-toolkit/cem-utilities";
-import fs from "fs";
 import * as cem from "custom-elements-manifest";
 import type { CemValidatorOptions, RuleFailure, Severity } from "./types.js";
-import { extractCustomEventType, isLatestPackageVersion, isNativeJSType, isValidFilePath, NATIVE_EVENT_TYPES } from "./utilities.js";
+import { getCemPublishedFailure, getComponentDefinitionPathFailure, getComponentModulePathFailure, getComponentTagNameFailure, getComponentTypeDefinitionPathFailure, getDefinitions, getExportsPropertyFailure, getMainPropertyFailure, getMissingExportedTypes, getPackageJson, getPackageTypeFailure, getSchemaVersionFailure, getTypesPropertyFailure, getCustomElementsFailure } from "./utilities.js";
 
-const CURRENT_CEM_VERSION = "2.1.0";
 export let failures: RuleFailure[] = [];
 let log: Logger;
 let userOptions: CemValidatorOptions = {
@@ -127,30 +123,12 @@ export async function testManifest(manifest: cem.Package) {
   testComponents(manifest);
 }
 
-function getPackageJson(packageJsonPath: string): any {
-  if (!isValidFilePath(packageJsonPath)) {
-    throw new Error(`"${packageJsonPath}" is not a valid file path.`);
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
-  return packageJson;
-}
-
-function getDefinitions(manifest: cem.Package): Map<string, string> {
-  const definitions = new Map<string, string>();
-  manifest.modules.forEach((mod) =>
-    mod.exports
-      ?.filter((x) => x.kind === "custom-element-definition")
-      ?.forEach((x) => definitions.set(x.name, mod.path)),
-  );
-  return definitions;
-}
-
 export function testComponents(manifest: cem.Package) {
   const rules = userOptions.rules!.manifest!;
   const definitions = getDefinitions(manifest);
 
   manifest.modules.forEach((module) => {
+    const exportNames = module.exports?.map((x) => x.declaration?.name) || [];
     module.declarations
       ?.filter((dec) => (dec as cem.CustomElement).customElement)
       .forEach((component) => {
@@ -172,7 +150,7 @@ export function testComponents(manifest: cem.Package) {
         );
         testComponentExportTypes(
           component as unknown as Component,
-          module.exports?.map((x) => x.declaration?.name) || [],
+          exportNames,
           rules.exportTypes!,
         );
       });
@@ -183,64 +161,36 @@ export function testPackageType(moduleType: string, severity: Severity) {
   if (severity === "off") {
     return;
   }
-
-  if (moduleType !== "module") {
-    addFailure(
-      "packageJson.moduleType",
-      severity,
-      "Package `type` is not 'module'. More information can be found at: https://nodejs.org/api/packages.html#type.",
-    );
-  }
+  checkFailure(
+    "packageJson.moduleType",
+    severity,
+    () => getPackageTypeFailure(moduleType),
+  );
 }
 
 export function testMainProperty(main: string, severity: Severity) {
   if (severity === "off") {
     return;
   }
-
-  if (!main) {
-    addFailure("packageJson.main", severity, "Missing `main` property.");
-  } else if (!isValidFilePath(main)) {
-    addFailure(
-      "packageJson.main",
-      severity,
-      "Invalid file path is set to `main` property. More information can be found at: https://nodejs.org/api/packages.html#main.",
-    );
-  }
+  checkFailure("packageJson.main", severity, () => getMainPropertyFailure(main));
 }
 
 export function testTypesProperty(types: string, severity: Severity) {
   if (severity === "off") {
     return;
   }
-
-  if (!types) {
-    addFailure(
-      "packageJson.types",
-      severity,
-      "The package.json is missing a `types` property. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions.",
-    );
-  } else if (!isValidFilePath(types)) {
-    addFailure(
-      "packageJson.types",
-      severity,
-      "Invalid file path is set to `types` property in the package.json. More information can be found at: https://nodejs.org/api/packages.html#community-conditions-definitions",
-    );
-  }
+  checkFailure("packageJson.types", severity, () =>getTypesPropertyFailure(types));
 }
 
 export function testExportsProperty(exports: string, severity: Severity) {
   if (severity === "off") {
     return;
   }
-
-  if (!exports) {
-    addFailure(
-      "packageJson.exports",
-      severity,
-      "The package.json is missing an `exports` property. More information can be found at: https://nodejs.org/api/packages.html#exports.",
-    );
-  }
+  checkFailure(
+    "packageJson.exports",
+    severity,
+    () => getExportsPropertyFailure(exports),
+  );
 }
 
 export function testCustomElementsProperty(
@@ -250,20 +200,11 @@ export function testCustomElementsProperty(
   if (severity === "off") {
     return;
   }
-
-  if (!customElements) {
-    addFailure(
-      "packageJson.customElements",
-      severity,
-      "The package.json is missing the `customElements` property. You can find more information at: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#referencing-manifests-from-npm-packages",
-    );
-  } else if (!isValidFilePath(customElements)) {
-    addFailure(
-      "packageJson.customElements",
-      severity,
-      "Invalid file path is set to `customElements` property.",
-    );
-  }
+  checkFailure(
+    "packageJson.customElements",
+    severity,
+    () => getCustomElementsFailure(customElements),
+  );
 }
 
 export function testCemPublished(
@@ -272,32 +213,16 @@ export function testCemPublished(
   cemFileName: string,
   severity: Severity,
 ) {
-  if (severity === "off" || !files?.length) {
+  if (severity === "off") {
     return;
   }
-  const hasCem = files.some((file) => file.endsWith(cemFileName));
-  if (hasCem || !customElements) {
+  if (!files?.length) {
     return;
   }
-
-  const cemRawPath = customElements.replace("./", "");
-
-  const isInSubdirectory = cemRawPath.includes("/");
-
-  if (isInSubdirectory) {
-    const cemDirectory = cemRawPath.split("/").slice(0, -1).join("/") + "/";
-    const isDirectoryIncluded = files.some((file) =>
-      cemDirectory.startsWith(file.replace("./", "")),
-    );
-    if (isDirectoryIncluded) {
-      return;
-    }
-  }
-
-  addFailure(
+  checkFailure(
     "packageJson.publishedCem",
     severity,
-    "The package.json is missing the `custom-elements.json` file in the `files` property. More information can be found at: https://docs.npmjs.com/cli/v10/configuring-npm/package-json?v=true#files.",
+    () => getCemPublishedFailure(files, customElements, cemFileName),
   );
 }
 
@@ -308,23 +233,11 @@ export async function testSchemaVersion(
   if (severity === "off") {
     return;
   }
-
-  if (!schemaVersion) {
-    addFailure(
-      "manifest.schemaVersion",
-      severity,
-      "The manifest is missing the `schemaVersion` property. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning",
-    );
-    return;
-  }
-
-  if (!isLatestPackageVersion(schemaVersion, CURRENT_CEM_VERSION)) {
-    addFailure(
-      "manifest.schemaVersion",
-      severity,
-      `The manifest schema version is outdated. The latest version is ${CURRENT_CEM_VERSION}. For more information, check out: https://github.com/webcomponents/custom-elements-manifest?tab=readme-ov-file#schema-versioning`,
-    );
-  }
+  checkFailure(
+    "manifest.schemaVersion",
+    severity,
+    () => getSchemaVersionFailure(schemaVersion),
+  );
 }
 
 export function testComponentModulePath(
@@ -335,19 +248,11 @@ export function testComponentModulePath(
   if (severity === "off") {
     return;
   }
-
-  let failureMessage = "";
-  if (!modulePath) {
-    failureMessage = `${componentName} is missing a module path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  } else if (modulePath.endsWith(".ts") || modulePath.includes("src/")) {
-    failureMessage = `${componentName} module path does not appear to reference the output path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  } else if (!isValidFilePath(modulePath)) {
-    failureMessage = `${modulePath} module path is invalid. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  }
-
-  if (failureMessage) {
-    addFailure("manifest.modulePath", severity, failureMessage);
-  }
+  checkFailure(
+    "manifest.modulePath",
+    severity,
+    () => getComponentModulePathFailure(componentName, modulePath),
+  );
 }
 
 export function testComponentDefinitionPath(
@@ -358,22 +263,11 @@ export function testComponentDefinitionPath(
   if (severity === "off") {
     return;
   }
-
-  let failureMessage = "";
-  if (!definitionPath) {
-    failureMessage = `${componentName} is missing a definition path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  } else if (
-    definitionPath.endsWith(".ts") ||
-    definitionPath.includes("src/")
-  ) {
-    failureMessage = `${componentName} definition path does not appear to reference the output path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  } else if (!isValidFilePath(definitionPath)) {
-    failureMessage = `${definitionPath} definition path is invalid. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  }
-
-  if (failureMessage) {
-    addFailure("manifest.definitionPath", severity, failureMessage);
-  }
+  checkFailure(
+    "manifest.definitionPath",
+    severity,
+    () => getComponentDefinitionPathFailure(componentName, definitionPath),
+  );
 }
 
 export function testComponentTypeDefinitionPath(
@@ -384,22 +278,11 @@ export function testComponentTypeDefinitionPath(
   if (severity === "off") {
     return;
   }
-
-  let failureMessage = "";
-  if (!definitionPath) {
-    return;
-  } else if (
-    definitionPath.endsWith(".ts") ||
-    !definitionPath.includes("src/")
-  ) {
-    failureMessage = `${componentName} definition path does not appear to reference the output path. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  } else if (!isValidFilePath(definitionPath)) {
-    failureMessage = `${definitionPath} definition path is invalid. For help updating this, check out: https://wc-toolkit.com/documentation/module-path-resolver/`;
-  }
-
-  if (failureMessage) {
-    addFailure("manifest.modulePath", severity, failureMessage);
-  }
+  checkFailure(
+    "manifest.modulePath",
+    severity,
+    () => getComponentTypeDefinitionPathFailure(componentName, definitionPath),
+  );
 }
 
 export function testComponentExportTypes(
@@ -410,38 +293,13 @@ export function testComponentExportTypes(
   if (severity === "off") {
     return;
   }
-
-  const eventTypes: string[] = []; 
-  component.events?.filter(x => 
-    x?.type?.text && 
-    !NATIVE_EVENT_TYPES.includes(x.type.text as any)
-  )?.forEach(event => {
-    const extractedType = extractCustomEventType(event.type?.text);
-    if (extractedType) {
-      eventTypes.push(extractedType);
-    }
-  });
-
-  const props = getComponentPublicProperties(component) || [];
-  const propTypes = props.map((prop) => prop.type?.text);
-
-  const methods = getComponentPublicMethods(component) || [];
-  const methodTypes = methods
-    ?.map((method) => method.parameters?.map((param) => param?.type?.text))
-    .flat();
-
-  const allTypes = [...eventTypes, ...propTypes, ...methodTypes].filter(
-    (type) => type && isNamedType(type),
-  );
-
-  allTypes.forEach((type) => {
-    if (!exports.includes(type!)) {
-      addFailure(
-        "manifest.exportTypes",
-        severity,
-        `${component.name} is missing exported type "${type}".`,
-      );
-    }
+  const missingTypes = getMissingExportedTypes(component, exports);
+  missingTypes.forEach((type) => {
+    addFailure(
+      "manifest.exportTypes",
+      severity,
+      `${component.name} is missing exported type "${type}".`,
+    );
   });
 }
 
@@ -453,26 +311,13 @@ export function testComponentTagName(
   if (severity === "off") {
     return;
   }
-
-  if (!tagName) {
-    addFailure(
-      "manifest.tagName",
-      severity,
-      `${componentName} is missing a tag name. You can add one by using the \`@tag\` and \`@tagName\` JSDoc tag.`,
-    );
-  }
-}
-
-function isNamedType(type: string): boolean {
-  return (
-    !type.startsWith("HTML") &&
-    !type.startsWith("SVG") &&
-    !isNativeJSType(type) &&
-    !type.includes('"') &&
-    !type.includes("'") &&
-    !type.includes("{")
+  checkFailure(
+    "manifest.tagName",
+    severity,
+    () => getComponentTagNameFailure(componentName, tagName),
   );
 }
+
 
 function addFailure(rule: string, severity: Severity, message: string) {
   failures.push({
@@ -480,4 +325,19 @@ function addFailure(rule: string, severity: Severity, message: string) {
     severity,
     message,
   });
+}
+
+function checkFailure(
+  rule: string,
+  severity: Severity,
+  getMessage: () => string | null,
+) {
+  if (severity === "off") {
+    return;
+  }
+  const message = getMessage();
+  if (!message) {
+    return;
+  }
+  addFailure(rule, severity, message);
 }

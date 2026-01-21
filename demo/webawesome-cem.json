@@ -14748,6 +14748,38 @@
       "exports": [
         {
           "kind": "js",
+          "name": "WaClearEvent",
+          "declaration": {
+            "name": "WaClearEvent",
+            "module": "components/select/select.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "WaPopup",
+          "declaration": {
+            "name": "WaPopup",
+            "module": "components/select/select.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "WaOption",
+          "declaration": {
+            "name": "WaOption",
+            "module": "components/select/select.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "TemplateResult",
+          "declaration": {
+            "name": "TemplateResult",
+            "module": "components/select/select.js"
+          }
+        },
+        {
+          "kind": "js",
           "name": "default",
           "declaration": {
             "name": "WaSelect",
