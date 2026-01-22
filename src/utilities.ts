@@ -144,6 +144,9 @@ export const NATIVE_JS_TYPES = [
   "HTMLSlotElement",
   "FillMode",
   "PlaybackDirection",
+  "CustomStateSet",
+  "ElementInternals",
+  "EventInit"
 ] as const;
 
 export const NATIVE_JS_GENERICS = [
@@ -202,6 +205,8 @@ const NON_EXPORTABLE_TYPE_NAMES = new Set([
   "function",
   "true",
   "false",
+  "this",
+  "internals"
 ].map((type) => type.toLowerCase()));
 
 const NATIVE_GENERIC_PREFIXES = NATIVE_JS_GENERICS.map((type) =>
