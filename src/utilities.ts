@@ -6,145 +6,7 @@ import {
   getComponentPublicMethods,
   getComponentPublicProperties,
 } from "@wc-toolkit/cem-utilities";
-
-export const NATIVE_EVENT_TYPES = [
-  "MouseEvent",
-  "KeyboardEvent",
-  "FocusEvent",
-  "InputEvent",
-  "UIEvent",
-  "WheelEvent",
-  "DragEvent",
-  "ClipboardEvent",
-  "TouchEvent",
-  "PointerEvent",
-  "AnimationEvent",
-  "TransitionEvent",
-  "ProgressEvent",
-  "Event",
-  "ErrorEvent",
-  "HashChangeEvent",
-  "PageTransitionEvent",
-  "PopStateEvent",
-  "StorageEvent",
-  "MessageEvent",
-  "BeforeUnloadEvent",
-  "CustomEvent",
-] as const;
-
-export const NATIVE_JS_TYPES = [
-  // Primitives
-  "string",
-  "number",
-  "boolean",
-  "bigint",
-  "symbol",
-  "undefined",
-  "null",
-  "any",
-  "unknown",
-  "never",
-  "void",
-  "array",
-  // Built-in Objects
-  "Object",
-  "Array",
-  "Function",
-  "Date",
-  "RegExp",
-  "Map",
-  "Set",
-  "WeakMap",
-  "WeakSet",
-  "Promise",
-  "Error",
-  "EvalError",
-  "RangeError",
-  "ReferenceError",
-  "SyntaxError",
-  "TypeError",
-  "URIError",
-  "AggregateError",
-  // Typed Arrays
-  "Int8Array",
-  "Uint8Array",
-  "Uint8ClampedArray",
-  "Int16Array",
-  "Uint16Array",
-  "Int32Array",
-  "Uint32Array",
-  "Float32Array",
-  "Float64Array",
-  "BigInt64Array",
-  "BigUint64Array",
-  "ArrayBuffer",
-  "SharedArrayBuffer",
-  "DataView",
-  // Other Built-ins
-  "Math",
-  "JSON",
-  "Intl",
-  "Reflect",
-  "Proxy",
-  "Iterator",
-  "AsyncIterator",
-  "Generator",
-  "GeneratorFunction",
-  "AsyncFunction",
-  "AsyncGenerator",
-  "AsyncGeneratorFunction",
-  // Web APIs
-  "File",
-  "Blob",
-  "FormData",
-  "FileList",
-  "FileReader",
-  "Headers",
-  "Request",
-  "Response",
-  "URL",
-  "URLSearchParams",
-  "AbortController",
-  "AbortSignal",
-  "ReadableStream",
-  "WritableStream",
-  "TransformStream",
-  "WebSocket",
-  "Worker",
-  "SharedWorker",
-  "MessageChannel",
-  "MessagePort",
-  "Notification",
-  "BroadcastChannel",
-  "ImageData",
-  "ImageBitmap",
-  "TextEncoder",
-  "TextDecoder",
-  "Crypto",
-  "SubtleCrypto",
-  "Performance",
-  "PerformanceEntry",
-  "PerformanceObserver",
-  "IntersectionObserver",
-  "MutationObserver",
-  "ResizeObserver",
-  "Window",
-  "Document",
-  "Element",
-  "HTMLElement",
-  "ShadowRoot",
-  "Node",
-  "EventTarget",
-  "ScrollBehavior",
-  "FocusOptions",
-  "VirtualElement",
-  "Keyframe",
-  "KeyframeAnimationOptions",
-  "CSSNumberish",
-  "HTMLSlotElement",
-  "FillMode",
-  "PlaybackDirection",
-] as const;
+import { NATIVE_EVENT_TYPES, NATIVE_JS_TYPES, NON_EXPORTABLE_TYPE_NAMES } from "./generated-types.js";
 
 export const NATIVE_JS_GENERICS = [
   "Promise",
@@ -160,49 +22,6 @@ export const NATIVE_JS_GENERICS = [
   "WeakSet",
   "WeakMap",
 ] as const;
-
-const NON_EXPORTABLE_TYPE_NAMES = new Set([
-  ...NATIVE_JS_TYPES,
-  ...NATIVE_EVENT_TYPES,
-  "any",
-  "unknown",
-  "never",
-  "void",
-  "undefined",
-  "null",
-  "boolean",
-  "number",
-  "string",
-  "bigint",
-  "symbol",
-  "object",
-  "array",
-  "readonly",
-  "readonlyarray",
-  "promise",
-  "record",
-  "partial",
-  "required",
-  "pick",
-  "omit",
-  "exclude",
-  "extract",
-  "nonnullable",
-  "parameters",
-  "returntype",
-  "instancetype",
-  "thistype",
-  "keyof",
-  "typeof",
-  "in",
-  "infer",
-  "as",
-  "extends",
-  "templateresult",
-  "function",
-  "true",
-  "false",
-].map((type) => type.toLowerCase()));
 
 const NATIVE_GENERIC_PREFIXES = NATIVE_JS_GENERICS.map((type) =>
   type.toLowerCase(),
@@ -308,10 +127,18 @@ export function extractNamedTypes(type: string): string[] {
     /\b[A-Za-z_$][A-Za-z0-9_$]*\s*:/g,
     " ",
   );
-  return withoutParamNames
+  const tokens = withoutParamNames
     .split(/[^A-Za-z0-9_$]/)
     .map((token) => token.trim())
     .filter(Boolean);
+
+  // If "typeof" is present, only keep tokens up to and including "typeof"
+  const typeofIndex = tokens.indexOf("typeof");
+  if (typeofIndex !== -1) {
+    return tokens.slice(0, typeofIndex + 1);
+  }
+
+  return tokens;
 }
 
 export function isExportableTypeName(type: string): boolean {
@@ -321,7 +148,9 @@ export function isExportableTypeName(type: string): boolean {
     !NON_EXPORTABLE_TYPE_NAMES.has(typeLower) &&
     !type.includes('"') &&
     !type.includes("'") &&
-    !type.includes("{")
+    !type.includes("{") &&
+    !type.includes(".") &&
+    !type.startsWith("typeof")
   );
 }
 

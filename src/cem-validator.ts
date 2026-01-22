@@ -132,6 +132,11 @@ export function testComponents(manifest: cem.Package) {
     module.declarations
       ?.filter((dec) => (dec as cem.CustomElement).customElement)
       .forEach((component) => {
+        if( userOptions.exclude?.includes(component.name)) {
+          log.log(`[cem-validator] - Skipping validation for excluded component: ${component.name}`);
+          return;
+        }
+        
         testComponentTagName(
           component.name,
           (component as cem.CustomElement).tagName || "",
