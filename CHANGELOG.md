@@ -1,5 +1,16 @@
 # @wc-toolkit/cem-validator
 
+## 1.3.0
+
+### Minor Changes
+
+- 65863d1: Added `exclude` type to exclude a list of classes from evaluation
+- 65863d1: Added a typescript type generator instead of manually maintaining a list
+
+### Patch Changes
+
+- 5e2b38d: Updated types to skip during evaluation
+
 ## 1.2.1
 
 ### Patch Changes
