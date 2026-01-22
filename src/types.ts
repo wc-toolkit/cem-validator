@@ -5,6 +5,8 @@ export type CemValidatorOptions = {
   cemFileName?: string;
   /** This will log errors rather throw an exception */
   logErrors?: boolean;
+  /** List of classes to exclude from validation */
+  exclude?: string[];
   /** Enables logging during the component loading process */
   debug?: boolean;
   /** Prevents plugin from executing */
